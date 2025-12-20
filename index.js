@@ -1,16 +1,23 @@
+const fs = require("fs");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
 const MAX_PAGES = 100;
 const visited = new Set();
-const queue = ["https://ipfabric.io/"];
+const START_URL = "https://ipfabric.io/";
+const queue = [START_URL];
+
+function saveErrorUrlMessage(url, message) {
+    const logMessage = url !== "" ? `URL : ${url}: Message - ${message}\n` : `Message - ${message}\n`;
+    fs.appendFileSync("logs.txt", logMessage);
+}
 
 function normalize(url) {
     try {
         const u = new URL(url);
-        u.hash = "";        
+        u.hash = "";
         return u.toString();
-    } catch {
+    } catch (error) {
         return null;
     }
 }
@@ -19,17 +26,18 @@ function extractLinks(html, baseUrl) {
     const links = [];
     const $ = cheerio.load(html);
 
-    $("a[href]").each((_, el) => {
-        const href = $(el).attr("href");
+    $("a[href]").each(async (_, el) => {
         try {
-            const url = new URL(href, baseUrl);
-            if (url.protocol.startsWith("http") || url.protocol.startsWith("https")) {
+            const href = $(el).attr("href");
+            let url = new URL(href, baseUrl);
+
+            if (url?.protocol.includes("http") || url?.protocol.includes("https")) {
                 const normalizedUrl = normalize(url.toString());
                 if (normalizedUrl) links.push(normalizedUrl);
             }
-        } catch {
-            console.error("extract like failed:", url);
-         }
+        } catch (error) {
+            await saveErrorUrlMessage("", "extract link failed : " + error.message);
+        }
     });
 
     return links;
@@ -41,14 +49,17 @@ async function crawl() {
         if (visited.has(url)) continue;
 
         visited.add(url);
-        console.log("Crawling:", url);
+        //saveErrorUrlMessage("Crawling url success : " + url, "");
+        console.log("Crawling url : " + url);
 
         try {
-            const res = await axios.get(url, { timeout: 5000, validateStatus: function (status) {
-                return status >= 200 && status < 300;;
-            }});
-            const links = extractLinks(res.data, url);
+            const res = await axios.get(url, {
+                timeout: 15000, validateStatus: function (status) {
+                    return status >= 200 && status <= 300;
+                }
+            });
 
+            const links = extractLinks(res.data, url);
             if (links.length > 0) {
                 for (const link of links) {
                     if (!visited.has(link)) {
@@ -57,12 +68,14 @@ async function crawl() {
                 }
             }
 
-        } catch {
-            console.error("Failed:", url);
+        } catch (error) {
+            saveErrorUrlMessage(url, "Crawling failed : " + error.message);
         }
     }
 
     console.log(`Done. Visited ${visited.size} pages.`);
 }
 
-crawl();
+(async () => {
+    await crawl();
+})();

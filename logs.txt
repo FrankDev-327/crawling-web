@@ -1,0 +1,9 @@
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
+URL : http://www.gartner.com/reviews/market/enterprise-networking-and-communications-others/vendor/ip-fabric/: Message - Crawling failed : Request failed with status code 403
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
+Message - extract link failed : Invalid URL
