@@ -36,7 +36,7 @@ function extractLinks(html, baseUrl) {
                 if (normalizedUrl) links.push(normalizedUrl);
             }
         } catch (error) {
-            await saveErrorUrlMessage("", "extract link failed : " + error.message);
+            saveErrorUrlMessage("", "extract link failed : " + error.message);
         }
     });
 
