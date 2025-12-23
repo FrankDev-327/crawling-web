@@ -54,7 +54,7 @@ async function crawl() {
 
         try {
             const res = await axios.get(url, {
-                timeout: 15000, validateStatus: function (status) {
+                timeout: 6000, validateStatus: function (status) {
                     return status >= 200 && status <= 300;
                 }
             });
