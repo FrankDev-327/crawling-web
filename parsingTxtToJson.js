@@ -3,8 +3,8 @@
 const fs = require('fs');
 
 function parseInterfaces(text) {
-    const interfaces = [];
     let current = null;
+    const interfaces = [];
     let currentLogical = null;
 
     const commitLogical = () => {
@@ -21,14 +21,13 @@ function parseInterfaces(text) {
             current = null;
         }
     };
-
+    
     for (let line of text.split('\n')) {
         line = line.trim();
-
         if (line.includes('Physical interface:')) {
             commitInterface();
-
-            const parts = line.replace('Physical interface: ', '').split(',');
+            
+            const parts = line.replace('Physical interface: ', '').split(',');          
             current = {
                 name: parts[0],
                 state: {
@@ -58,10 +57,10 @@ function parseInterfaces(text) {
 
         if (line.includes('Current address:')) {
             const mac = line.split('Current address:')[1].split(',')[0].trim();
-            current.mac = formatMac(mac);
+            current.mac = mac.replace(/:/g, '').match(/.{1,4}/g).join('.');
         }
 
-        if (line.startsWith('Logical interface ')) {
+        if (line.includes('Logical interface ')) {
             commitLogical();
             const logicalName = line.replace('Logical interface ', '').split(' ')[0];
             currentLogical = {
@@ -76,7 +75,7 @@ function parseInterfaces(text) {
                 currentLogical.dscr = line.split('Description:')[1].trim();
             }
 
-            if (line.startsWith('Protocol ')) {
+            if (line.includes('Protocol ')) {
                 const protocol = line.replace('Protocol ', '').split(',')[0].trim();
                 currentLogical.protocolList.push({ type: protocol });
             }
@@ -87,22 +86,15 @@ function parseInterfaces(text) {
     return interfaces;
 }
 
-// Helpers
 function normalizeSpeed(str) {
-    const n = parseInt(str);
+    let name = "";
     const lower = str.toLowerCase();
-    if (lower.includes('g')) return n * 1e9;
-    if (lower.includes('m')) return n * 1e6;
-    return n;
-}
-
-function formatMac(mac) {
-    const raw = mac.replace(/:/g, '');
-    return raw.match(/.{1,4}/g).join('.');
+    if (str.toLowerCase().includes('g')) name = parseInt(str) * 1e9;
+    if (str.toLowerCase().includes('m')) name = parseInt(str) * 1e6;
+    return name;
 }
 
 const text = fs.readFileSync('./parsing.task.txt', 'utf8');
-
 const result = parseInterfaces(text);
 fs.writeFile('./parsingResult.json', JSON.stringify(result, null, 2), (err) => {
     if (err) throw err;
