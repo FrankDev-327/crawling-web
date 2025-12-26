@@ -88,7 +88,6 @@ function parseInterfaces(text) {
 
 function normalizeSpeed(str) {
     let name = "";
-    const lower = str.toLowerCase();
     if (str.toLowerCase().includes('g')) name = parseInt(str) * 1e9;
     if (str.toLowerCase().includes('m')) name = parseInt(str) * 1e6;
     return name;
